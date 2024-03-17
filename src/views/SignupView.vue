@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <div class="main">
     <form @submit.prevent="handleSubmitSignup">
       <div>
         <label for="email">Enter your email</label>
@@ -33,29 +33,37 @@
       </div>
       <input type="submit" value="Signup" />
     </form>
-  </main>
+  </div>
 </template>
 
 <script lang="ts" setup>
+import { useAuthStore } from '@/stores/index'
 import { ref } from 'vue'
 
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 
-function handleSubmitSignup() {
+async function handleSubmitSignup() {
   const trimedEmail = email.value.trim()
   const trimedPassword = email.value.trim()
   const trimedConfirmPassword = email.value.trim()
 
   if (trimedEmail && trimedPassword === trimedConfirmPassword) {
-    console.log('confirmed')
+    const authStore = useAuthStore()
+    try {
+      const { data, error } = await authStore.createUser(trimedEmail, trimedPassword)
+      if (error) throw error
+      console.log(data)
+    } catch (err) {
+      console.log(err)
+    }
   }
 }
 </script>
 
 <style scoped lang="css">
-main {
+.main {
   display: flex;
   min-height: 100vh;
 }

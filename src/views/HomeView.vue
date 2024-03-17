@@ -1,76 +1,128 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { supabase } from '../lib/supabaseClient'
 import { useRouter } from 'vue-router'
+import { useAuthStore, useNoteStore } from '@/stores'
 
-type TodoType = {
+export type TodoType = {
   content: string
   category: string
   done: boolean
-  createdAt: Date
-  updatedAt: Date | null
-  createdBy: string
+  created_by: string
+  user_id: string
+  created_at: Date
+  id: string
+}
+
+type UserMetadataType = {
+  avatar_url: string
+  email: string
+  email_verified: boolean
+  full_name: string
+  iss: string
+  name: string
+  phone_verified: boolean
+  picture: string
+  provider_id: string
+  sub: string
 }
 
 const router = useRouter()
+const authStore = useAuthStore()
+const noteStore = useNoteStore()
 
 const nameUser = ref('')
+const uuid = ref('')
 const inputContent = ref('')
 const inputCategory = ref<'business' | 'personal'>('personal')
 const todos = ref<TodoType[]>([])
-const countries = ref<any[] | null>([])
+const userMetadata = ref<UserMetadataType | null>(null)
 
-function addTodo(payload: Event) {
+async function handleLogout() {
+  try {
+    const error = await authStore.logoutUser()
+    if (error) throw error
+    router.replace({ name: 'login' })
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function addTodo(payload: Event) {
   payload.preventDefault()
   if (inputContent.value.trim() === '') return
-  todos.value.push({
-    category: inputCategory.value,
-    content: inputContent.value,
-    createdAt: new Date(),
-    createdBy: nameUser.value,
-    done: false,
-    updatedAt: null
-  })
+  try {
+    const error = await noteStore.createNote({
+      category: inputCategory.value,
+      content: inputContent.value,
+      created_by: nameUser.value,
+      done: false,
+      user_id: uuid.value
+    })
+    if (error) throw error
+  } catch (err) {
+    console.log(err)
+  }
   inputContent.value = ''
   inputCategory.value = 'business'
+
+  fetchNotes()
 }
-function deleteTodo(todo: TodoType) {
-  todos.value = todos.value.filter((el) => el !== todo)
+async function deleteTodo(todo: TodoType) {
+  try {
+    const error = await noteStore.deleteNote(todo.id)
+    if (error) throw error
+    fetchNotes()
+  } catch (err) {
+    console.error(err)
+  }
+}
+async function fetchNotes() {
+  try {
+    const { data, error } = await noteStore.viewNotes()
+    if (error) throw error
+    todos.value = data
+  } catch (err) {
+    console.error(err)
+  }
 }
 
-async function getCountries() {
-  const { data } = await supabase.from('countries').select()
-  countries.value = data
+async function updateNote() {
+  await new Promise((solve) => {
+    setTimeout(() => {
+      solve('resolved')
+    }, 3000)
+  })
 }
 
 watch(
   todos,
   (curr) => {
-    window.localStorage.setItem('todos', JSON.stringify(curr))
+    console.log(curr)
+    updateNote()
   },
   {
     deep: true
   }
 )
-watch(nameUser, (prev) => {
-  window.localStorage.setItem('name', prev)
-})
+
 onMounted(() => {
-  nameUser.value = window.localStorage.getItem('name') || ''
-  const todosString = window.localStorage.getItem('todos')
-  todos.value = todosString ? JSON.parse(todosString) : []
-  getCountries()
+  userMetadata.value = authStore.userStore.user_metadata
+  uuid.value = authStore.userStore.id
+  nameUser.value = userMetadata.value?.full_name || ''
+  fetchNotes()
 })
 </script>
 
 <template>
-  <main class="app">
+  <div class="app">
     <section class="greeting">
       <h2 class="title">
-        <span>What's up, <input type="text" v-model="nameUser" placeholder="Name here" /></span>
+        <span
+          >What's up, <input disabled type="text" :value="nameUser" placeholder="Name here"
+        /></span>
       </h2>
       <div class="auth-btn--container">
-        <button>Sign Out</button>
+        <button @click="handleLogout">Sign Out</button>
         <button @click="router.push({ name: 'login' })">Log in</button>
       </div>
     </section>
@@ -107,12 +159,8 @@ onMounted(() => {
     </section>
     <section class="todo-list">
       <h3>TODO LIST</h3>
-      <div class="list">
-        <div
-          v-for="(todo, index) in todos"
-          :key="index"
-          :class="`todo-item ${todo.done && 'done'}`"
-        >
+      <div v-if="todos && todos.length > 0" class="list">
+        <div v-for="todo in todos" :key="todo.id" :class="`todo-item ${todo.done && 'done'}`">
           <label>
             <input type="checkbox" v-model="todo.done" />
             <span :class="`bubble ${todo.category}`"> </span>
@@ -126,8 +174,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
+      <div v-else>Notes are empty</div>
     </section>
-  </main>
+  </div>
 </template>
 
 <style scoped lang="css">
@@ -136,6 +185,7 @@ onMounted(() => {
   flex-direction: row;
   justify-content: space-between;
 }
+
 .auth-btn--container {
   display: flex;
   justify-content: space-between;
