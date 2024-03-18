@@ -47,5 +47,15 @@ export const useNoteStore = defineStore('noteStore', () => {
     return error
   }
 
-  return { createNote, viewNotes, deleteNote }
+  async function updateNoteContent(newValue: string, id: string) {
+    const { error } = await supabase.from('note').update({ content: newValue }).eq('id', id)
+    return error
+  }
+
+  async function updateNoteDone(newVal: boolean, id: string) {
+    const { error } = await supabase.from('note').update({ done: newVal }).eq('id', id)
+    return error
+  }
+
+  return { createNote, viewNotes, deleteNote, updateNoteContent, updateNoteDone }
 })

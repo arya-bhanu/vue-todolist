@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore, useNoteStore } from '@/stores'
 
@@ -36,6 +36,8 @@ const inputContent = ref('')
 const inputCategory = ref<'business' | 'personal'>('personal')
 const todos = ref<TodoType[]>([])
 const userMetadata = ref<UserMetadataType | null>(null)
+const isUpdating = ref(false)
+const oldValInput = ref('')
 
 async function handleLogout() {
   try {
@@ -86,24 +88,38 @@ async function fetchNotes() {
   }
 }
 
-async function updateNote() {
-  await new Promise((solve) => {
-    setTimeout(() => {
-      solve('resolved')
-    }, 3000)
-  })
+async function handleOnFocus(e: FocusEvent) {
+  oldValInput.value = (e.target as HTMLInputElement).value
 }
 
-watch(
-  todos,
-  (curr) => {
-    console.log(curr)
-    updateNote()
-  },
-  {
-    deep: true
+async function updateNoteContent(e: FocusEvent, id: string) {
+  const value = (e.target as HTMLInputElement).value
+  if (value.trim() === oldValInput.value.trim()) return
+  try {
+    isUpdating.value = true
+    const error = await noteStore.updateNoteContent(value, id)
+    if (error) throw error
+  } catch (err) {
+    console.error(err)
+  } finally {
+    await fetchNotes()
+    isUpdating.value = false
   }
-)
+}
+
+async function updateNoteDone(e: Event, id: string) {
+  const newVal = (e.target as HTMLInputElement).checked
+  try {
+    isUpdating.value = true
+    const error = await noteStore.updateNoteDone(newVal, id)
+    if (error) throw error
+  } catch (err) {
+    console.error(err)
+  } finally {
+    await fetchNotes()
+    isUpdating.value = false
+  }
+}
 
 onMounted(() => {
   userMetadata.value = authStore.userStore.user_metadata
@@ -162,11 +178,22 @@ onMounted(() => {
       <div v-if="todos && todos.length > 0" class="list">
         <div v-for="todo in todos" :key="todo.id" :class="`todo-item ${todo.done && 'done'}`">
           <label>
-            <input type="checkbox" v-model="todo.done" />
+            <input
+              @change.prevent="(e) => updateNoteDone(e, todo.id)"
+              :disabled="isUpdating"
+              type="checkbox"
+              v-model="todo.done"
+            />
             <span :class="`bubble ${todo.category}`"> </span>
           </label>
           <div class="todo-content">
-            <input type="text" v-model="todo.content" />
+            <input
+              @focus.prevent="handleOnFocus"
+              @blur.prevent="(e) => updateNoteContent(e, todo.id)"
+              :disabled="isUpdating"
+              type="text"
+              v-model="todo.content"
+            />
           </div>
 
           <div class="actions">
