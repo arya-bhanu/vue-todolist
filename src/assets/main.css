@@ -22,11 +22,9 @@
 
 input:not([type='radio']):not([type='checkbox']),
 button {
-  appearance: none;
   border: none;
   outline: none;
   background: none;
-  cursor: initial;
 }
 
 body {
@@ -53,6 +51,12 @@ h4 {
   font-size: 0.875rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
+}
+
+.greeting {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.7rem;
 }
 
 .greeting .title {

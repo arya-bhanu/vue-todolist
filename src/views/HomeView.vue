@@ -132,11 +132,12 @@ onMounted(() => {
 <template>
   <div class="app">
     <section class="greeting">
-      <h2 class="title">
-        <span
-          >What's up, <input disabled type="text" :value="nameUser" placeholder="Name here"
-        /></span>
-      </h2>
+      <div class="name-container">
+        <span>What's up, </span>
+        <h2 class="title">
+          {{ nameUser }}
+        </h2>
+      </div>
       <div class="auth-btn--container">
         <button @click="handleLogout">Sign Out</button>
         <button @click="router.push({ name: 'login' })">Log in</button>
@@ -195,9 +196,11 @@ onMounted(() => {
               v-model="todo.content"
             />
           </div>
-
-          <div class="actions">
-            <button class="delete" @click="() => deleteTodo(todo)">Delete</button>
+          <div class="right-container">
+            <span>{{ todo.category }}</span>
+            <div class="actions">
+              <button class="delete" @click="() => deleteTodo(todo)">Delete</button>
+            </div>
           </div>
         </div>
       </div>
@@ -207,6 +210,27 @@ onMounted(() => {
 </template>
 
 <style scoped lang="css">
+.name-container span {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.right-container {
+  display: flex;
+  align-items: center;
+  column-gap: 0.3rem;
+  row-gap: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.right-container span {
+  background-color: rgb(215, 24, 177);
+  color: white;
+  padding: 0.4rem 0.5rem;
+  display: block;
+  border-radius: 0.3rem;
+}
+
 .greeting {
   display: flex;
   flex-direction: row;
@@ -219,7 +243,18 @@ onMounted(() => {
   column-gap: 0.7rem;
 }
 .auth-btn--container button {
+  display: block;
+  height: fit-content;
   min-width: max-content;
   cursor: pointer;
+  background-color: white;
+  font-weight: bold;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.1s ease;
+}
+.auth-btn--container button:hover {
+  box-shadow: 0px 0px 7px 2px rgba(0, 0, 0, 0.1);
 }
 </style>
