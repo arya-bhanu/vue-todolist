@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
-import type { TodoType } from '@/views/HomeView.vue'
+import type { TodoType } from '@/views/DashboardView.vue'
 import type { User } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -11,7 +11,7 @@ export const useAuthStore = defineStore('authStore', () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${import.meta.env.VITE_CLIENT_URL}/welcome`
+        redirectTo: `${import.meta.env.VITE_CLIENT_URL}/dashboard`
       }
     })
     return { data, error }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore, useNoteStore } from '@/stores'
 
@@ -26,6 +26,12 @@ type UserMetadataType = {
   sub: string
 }
 
+enum NoteCategoryType {
+  all,
+  business,
+  personal
+}
+
 const router = useRouter()
 const authStore = useAuthStore()
 const noteStore = useNoteStore()
@@ -38,12 +44,39 @@ const todos = ref<TodoType[]>([])
 const userMetadata = ref<UserMetadataType | null>(null)
 const isUpdating = ref(false)
 const oldValInput = ref('')
+const filterNoteType = ref(NoteCategoryType.all)
+
+watch(
+  filterNoteType,
+  (curr) => {
+    console.log(curr)
+    fetchNotes()
+  },
+  {
+    immediate: true
+  }
+)
+
+onMounted(() => {
+  userMetadata.value = authStore.userStore.user_metadata
+  uuid.value = authStore.userStore.id
+  nameUser.value = userMetadata.value?.full_name || ''
+})
 
 async function handleLogout() {
   try {
     const error = await authStore.logoutUser()
     if (error) throw error
-    router.replace({ name: 'login' })
+    router.replace({ name: 'welcome' })
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function handleLogin() {
+  try {
+    const { error } = await authStore.loginUser()
+    if (error) throw error
   } catch (err) {
     console.error(err)
   }
@@ -120,13 +153,6 @@ async function updateNoteDone(e: Event, id: string) {
     isUpdating.value = false
   }
 }
-
-onMounted(() => {
-  userMetadata.value = authStore.userStore.user_metadata
-  uuid.value = authStore.userStore.id
-  nameUser.value = userMetadata.value?.full_name || ''
-  fetchNotes()
-})
 </script>
 
 <template>
@@ -140,7 +166,7 @@ onMounted(() => {
       </div>
       <div class="auth-btn--container">
         <button @click="handleLogout">Sign Out</button>
-        <button @click="router.push({ name: 'login' })">Log in</button>
+        <button @click="handleLogin">Log in</button>
       </div>
     </section>
     <section class="create-todo">
@@ -175,7 +201,14 @@ onMounted(() => {
       </form>
     </section>
     <section class="todo-list">
-      <h3>TODO LIST</h3>
+      <div>
+        <h3>TODO LIST</h3>
+        <select v-model="filterNoteType" class="filter-type">
+          <option :value="NoteCategoryType.all">All</option>
+          <option :value="NoteCategoryType.business">Business</option>
+          <option :value="NoteCategoryType.personal">Personal</option>
+        </select>
+      </div>
       <div v-if="todos && todos.length > 0" class="list">
         <div v-for="todo in todos" :key="todo.id" :class="`todo-item ${todo.done && 'done'}`">
           <label>
@@ -210,6 +243,18 @@ onMounted(() => {
 </template>
 
 <style scoped lang="css">
+.filter-type {
+  padding: 0.3rem 0.6rem;
+  outline: none;
+  border: none;
+  transition: box-shadow 0.2s ease;
+  border-radius: 7px;
+}
+
+.filter-type:focus {
+  box-shadow: 0px 0px 6px 2px rgba(0, 0, 0, 0.1);
+}
+
 .name-container span {
   font-weight: bold;
   font-size: 1.2rem;
