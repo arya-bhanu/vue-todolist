@@ -28,8 +28,8 @@ type UserMetadataType = {
 
 enum NoteCategoryType {
   all,
-  business,
-  personal
+  business = 'business',
+  personal = 'personal'
 }
 
 const router = useRouter()
@@ -48,8 +48,7 @@ const filterNoteType = ref(NoteCategoryType.all)
 
 watch(
   filterNoteType,
-  (curr) => {
-    console.log(curr)
+  () => {
     fetchNotes()
   },
   {
@@ -112,10 +111,21 @@ async function deleteTodo(todo: TodoType) {
   }
 }
 async function fetchNotes() {
+  let dataRes = []
+  let errorRes
   try {
-    const { data, error } = await noteStore.viewNotes()
-    if (error) throw error
-    todos.value = data
+    if (filterNoteType.value === NoteCategoryType.all) {
+      const { data, error } = await noteStore.viewNotes()
+      errorRes = error
+      dataRes = data
+    } else {
+      const { data, error } = await noteStore.viewNotesFilter(filterNoteType.value)
+      errorRes = error
+      dataRes = data
+    }
+
+    if (errorRes) throw errorRes
+    todos.value = dataRes
   } catch (err) {
     console.error(err)
   }
@@ -151,6 +161,22 @@ async function updateNoteDone(e: Event, id: string) {
   } finally {
     await fetchNotes()
     isUpdating.value = false
+  }
+}
+
+async function updateNoteCategory(e: Event, id: string) {
+  const value = (e.target as HTMLSelectElement).value
+  if (value && id) {
+    try {
+      isUpdating.value = true
+      const error = await noteStore.updateNoteCategory(value, id)
+      if (error) throw error
+    } catch (err) {
+      console.error(err)
+    } finally {
+      await fetchNotes()
+      isUpdating.value = false
+    }
   }
 }
 </script>
@@ -201,7 +227,7 @@ async function updateNoteDone(e: Event, id: string) {
       </form>
     </section>
     <section class="todo-list">
-      <div>
+      <div class="filter-wrapper">
         <h3>TODO LIST</h3>
         <select v-model="filterNoteType" class="filter-type">
           <option :value="NoteCategoryType.all">All</option>
@@ -211,38 +237,65 @@ async function updateNoteDone(e: Event, id: string) {
       </div>
       <div v-if="todos && todos.length > 0" class="list">
         <div v-for="todo in todos" :key="todo.id" :class="`todo-item ${todo.done && 'done'}`">
-          <label>
-            <input
-              @change.prevent="(e) => updateNoteDone(e, todo.id)"
-              :disabled="isUpdating"
-              type="checkbox"
-              v-model="todo.done"
-            />
-            <span :class="`bubble ${todo.category}`"> </span>
-          </label>
-          <div class="todo-content">
-            <input
-              @focus.prevent="handleOnFocus"
-              @blur.prevent="(e) => updateNoteContent(e, todo.id)"
-              :disabled="isUpdating"
-              type="text"
-              v-model="todo.content"
-            />
+          <div class="input-wrapper-list">
+            <label>
+              <input
+                @change.prevent="(e) => updateNoteDone(e, todo.id)"
+                :disabled="isUpdating"
+                type="checkbox"
+                v-model="todo.done"
+              />
+              <span :class="`bubble ${todo.category}`"> </span>
+            </label>
+            <div class="todo-content">
+              <input
+                @focus.prevent="handleOnFocus"
+                @blur.prevent="(e) => updateNoteContent(e, todo.id)"
+                :disabled="isUpdating"
+                type="text"
+                v-model="todo.content"
+              />
+            </div>
           </div>
           <div class="right-container">
-            <span>{{ todo.category }}</span>
+            <select @change.prevent="(e) => updateNoteCategory(e, todo.id)">
+              <option
+                :selected="NoteCategoryType.business === todo.category"
+                :value="NoteCategoryType.business"
+              >
+                Business
+              </option>
+              <option
+                :selected="NoteCategoryType.personal === todo.category"
+                :value="NoteCategoryType.personal"
+              >
+                Personal
+              </option>
+            </select>
             <div class="actions">
               <button class="delete" @click="() => deleteTodo(todo)">Delete</button>
             </div>
           </div>
         </div>
       </div>
-      <div v-else>Notes are empty</div>
+      <div class="notes-empty" v-else>Notes are empty</div>
     </section>
   </div>
 </template>
 
 <style scoped lang="css">
+.input-wrapper-list {
+  display: flex;
+}
+
+.notes-empty {
+  margin-top: 2w0px;
+}
+.filter-wrapper {
+  display: flex;
+  align-items: center;
+  column-gap: 10px;
+}
 .filter-type {
   padding: 0.3rem 0.6rem;
   outline: none;
@@ -269,11 +322,12 @@ async function updateNoteDone(e: Event, id: string) {
 }
 
 .right-container span {
-  background-color: rgb(215, 24, 177);
   color: white;
-  padding: 0.4rem 0.5rem;
   display: block;
   border-radius: 0.3rem;
+  display: block;
+  width: 100%;
+  background-color: rgb(126, 36, 171);
 }
 
 .greeting {

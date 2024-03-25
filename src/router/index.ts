@@ -8,7 +8,14 @@ const router = createRouter({
     {
       path: '/',
       name: 'welcome',
-      component: WelcomeView
+      component: WelcomeView,
+      async beforeEnter() {
+        const authStore = useAuthStore()
+        const { user } = await authStore.getUser()
+        if (user) {
+          return { name: 'dashboard' }
+        }
+      }
     },
     {
       path: '/dashboard',

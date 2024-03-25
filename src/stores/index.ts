@@ -42,6 +42,11 @@ export const useNoteStore = defineStore('noteStore', () => {
     return { data, error }
   }
 
+  async function viewNotesFilter(filter: string) {
+    const { data, error } = await supabase.from('note').select().eq('category', filter)
+    return { data, error }
+  }
+
   async function deleteNote(id: string) {
     const { error } = await supabase.from('note').delete().eq('id', id)
     return error
@@ -57,5 +62,18 @@ export const useNoteStore = defineStore('noteStore', () => {
     return error
   }
 
-  return { createNote, viewNotes, deleteNote, updateNoteContent, updateNoteDone }
+  async function updateNoteCategory(newVal: string, id: string) {
+    const { error } = await supabase.from('note').update({ category: newVal }).eq('id', id)
+    return error
+  }
+
+  return {
+    createNote,
+    viewNotes,
+    deleteNote,
+    updateNoteContent,
+    updateNoteDone,
+    viewNotesFilter,
+    updateNoteCategory
+  }
 })

@@ -43,7 +43,6 @@ h3 {
   color: var(--dark);
   font-size: 1rem;
   font-weight: 400;
-  margin-bottom: 0.5rem;
 }
 
 h4 {
@@ -186,6 +185,7 @@ input:checked ~ .bubble::after {
   border-radius: 0.5rem;
   box-shadow: var(--shadow);
   margin-bottom: 1rem;
+  justify-content: space-between;
 }
 
 .todo-item label {
@@ -194,13 +194,11 @@ input:checked ~ .bubble::after {
   cursor: pointer;
 }
 
-.todo-item .todo-content {
-  flex: 1 1 0%;
-}
-
 .todo-item .todo-content input {
   color: var(--dark);
   font-size: 1.125rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .todo-item .actions {
@@ -210,7 +208,6 @@ input:checked ~ .bubble::after {
 
 .todo-item .actions button {
   display: block;
-  padding: 0.5rem;
   border-radius: 0.25rem;
   color: #fff;
   cursor: pointer;

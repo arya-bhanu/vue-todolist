@@ -8,7 +8,12 @@
 
 <style scoped lang="css">
 main {
-  max-width: 60vw;
   margin: 0 auto;
+}
+@media (min-width: 768px) {
+  body main {
+    max-width: 60vw;
+    width: 100%;
+  }
 }
 </style>
