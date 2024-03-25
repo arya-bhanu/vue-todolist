@@ -258,7 +258,10 @@ async function updateNoteCategory(e: Event, id: string) {
             </div>
           </div>
           <div class="right-container">
-            <select @change.prevent="(e) => updateNoteCategory(e, todo.id)">
+            <select
+              class="filter-type update"
+              @change.prevent="(e) => updateNoteCategory(e, todo.id)"
+            >
               <option
                 :selected="NoteCategoryType.business === todo.category"
                 :value="NoteCategoryType.business"
@@ -286,10 +289,15 @@ async function updateNoteCategory(e: Event, id: string) {
 <style scoped lang="css">
 .input-wrapper-list {
   display: flex;
+  align-items: center;
 }
 
 .notes-empty {
   margin-top: 2w0px;
+}
+
+.filter-type.update {
+  border: 0.5px solid rgba(0, 0, 0, 0.3);
 }
 .filter-wrapper {
   display: flex;
