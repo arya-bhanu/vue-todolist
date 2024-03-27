@@ -53,7 +53,11 @@ export const useNoteStore = defineStore('noteStore', () => {
   }
 
   async function updateNoteContent(newValue: string, id: string) {
-    const { error } = await supabase.from('note').update({ content: newValue }).eq('id', id)
+    const { error } = await supabase
+      .from('note')
+      .update({ content: newValue })
+      .eq('id', id)
+      .eq('done', false)
     return error
   }
 
@@ -63,7 +67,11 @@ export const useNoteStore = defineStore('noteStore', () => {
   }
 
   async function updateNoteCategory(newVal: string, id: string) {
-    const { error } = await supabase.from('note').update({ category: newVal }).eq('id', id)
+    const { error } = await supabase
+      .from('note')
+      .update({ category: newVal })
+      .eq('id', id)
+      .eq('done', false)
     return error
   }
 

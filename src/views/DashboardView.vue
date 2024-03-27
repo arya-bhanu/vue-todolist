@@ -251,7 +251,7 @@ async function updateNoteCategory(e: Event, id: string) {
               <input
                 @focus.prevent="handleOnFocus"
                 @blur.prevent="(e) => updateNoteContent(e, todo.id)"
-                :disabled="isUpdating"
+                :disabled="isUpdating || todo.done === true"
                 type="text"
                 v-model="todo.content"
               />
@@ -260,6 +260,7 @@ async function updateNoteCategory(e: Event, id: string) {
           <div class="right-container">
             <select
               class="filter-type update"
+              :disabled="isUpdating || todo.done === true"
               @change.prevent="(e) => updateNoteCategory(e, todo.id)"
             >
               <option
